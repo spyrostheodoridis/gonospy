@@ -27,10 +27,10 @@ recommendations of Minoche et al. (2011) Genome Biology. The user can define the
 **trmBases**: Number of bases to trim from the end of the read. Default value 0  
 **repThrs**: The minimum number of identical copies of a read in order to be defined as highly repetitive and excluded from the filtered file  
 
-The following code will walk through all fastq.gz in the 'test' directory, filter them and save the filtered files in the 'test/cleanFiles' directory together with
+The following code will walk through all fastq.gz in the 'test' directory, filter them by trimming the last 10 bases per read and save the filtered files in the 'test/cleanFiles' directory together with
 a log file containing information about the filtering process. This information will also be printed on the screen. The user should also put a file named 'llumina_Q_scores_phred33.txt' (available from this repository) into the 'test' directory.
 
 ```python
-gonospy.filterReads('test/')
+gonospy.filterReads(indir = 'test/', trmBases = 10)
 ```
 
