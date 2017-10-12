@@ -7,7 +7,7 @@ def writeLinesToFile(outfile, line_list):
     for item in line_list:
         outfile.write('%s' % item)
 
-def filterReads(indir, qThresh = 30, pQ = 0.5, trmBases = 11, repThrs = 1000):
+def filterReads(indir, qThresh = 30, pQ = 0.5, trmBases = 0, repThrs = 1000):
     #lines for each read/record
     n=4
     # qThresh -> base quality threshold
