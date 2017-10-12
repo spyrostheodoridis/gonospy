@@ -23,7 +23,6 @@ recommendations of Minoche et al. (2011) Genome Biology. The user can define the
 
 **indir**: the directory of the zipped fastq.gz raw files
 **qThresh**: The quality threshold below which a base is considered of low quality. Default value 30
-
 **pQ**: The percentage of each read to be checked for quality score. Default value 0.5 (i.e. the first half of the read will be checked)
 
 **trmBases**: Number of bases to trim from the end of the read. Default value 0
