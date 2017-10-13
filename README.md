@@ -40,14 +40,14 @@ The following function filters VCF files (https://samtools.github.io/hts-specs/V
 Alleles below the thresholds described below will be excluded and the genotype will be called as homozygous for the alternative allele. The following parameters can be defined:
 
 **indir**: the directory of the .VCF files  
-**RefDepthThrs**: read coverage threshold for reference allele (5) 
-**VarDepthThrs**: read coverage threshold for the alternative allele (5) 
-**MaxAlleles**: maximum number of alternative alleles (1) (only binary states are allowed for the moment) 
-**MissSampThrs**: percentage of missing samples allowed (0.2) 
-**TotRefFreqThrs** minimum frequency of the reference allele across all genotypes (0.05) 
-**TotVarFreqThrs** minimum frequency of the variant allele across all genotypes (0.05) 
-**TotCovThrs** minimum frequency of the reference allele (coverage) in each genotype (0.05, accounts for extreme differences in read coverage between the reference and the alternative allele) 
-**VarCovThrs** minimum frequency of the variant allele (coverage) in each genotype (0.05, same as above) 
+**RefDepthThrs**: read coverage threshold for reference allele (5)  
+**VarDepthThrs**: read coverage threshold for the alternative allele (5)  
+**MaxAlleles**: maximum number of alternative alleles (1) (only binary states are allowed for the moment)  
+**MissSampThrs**: percentage of missing samples allowed (0.2)  
+**TotRefFreqThrs** minimum frequency of the reference allele across all genotypes (0.05)  
+**TotVarFreqThrs** minimum frequency of the variant allele across all genotypes (0.05)  
+**TotCovThrs** minimum frequency of the reference allele (coverage) in each genotype (0.05, accounts for extreme differences in read coverage between the reference and the alternative allele)  
+**VarCovThrs** minimum frequency of the variant allele (coverage) in each genotype (0.05, same as above)  
 **locus**. if false (default) the chromosome number will be printed, else the loci number (for VCF files produced by STACKS; http://catchenlab.life.illinois.edu/stacks/)
 
 ```python
