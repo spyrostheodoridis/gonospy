@@ -122,3 +122,183 @@ def filterReads(indir, qThresh = 30, pQ = 0.5, percQual = 2/3, trmBases = 0, rep
             os.remove(infile)
     print('Finished\n')
     flog.close()
+
+
+def filterVCF(indir, RefDepthThrs = 5, VarDepthThrs = 5, MaxAlleles = 1, MissSampThrs = 0.2, TotVarFreqThrs = 0.05, 
+              TotRefFreqThrs = 0.05, VarCovThrs = 0.05, TotCovThrs = 0.05, locus = False):
+    
+    # RefDepthThrs -> coverage threshold for reference allele
+    # VarDepthThrs -> coverage threshold for the alternative allele
+    # MaxAlleles -> maximum number of alternative alleles
+    # MissSampThrs -> percentage of missing samples allowed
+    # TotVarFreqThrs -> minimum frequency of the variant allele across all genotypes
+    # TotRefFreqThrs -> minimum frequency of the reference allele across all genotypes
+    # VarCovThrs -> minimum frequency of the variant allele (coverage) in each genotype
+    # TotCovThrs -> minimum frequency of the reference allele (coverage) in each genotype
+    listdir = os.listdir(indir)
+    
+    for fname in listdir:
+        if fname.endswith('.vcf'):
+            FiltFile = open('{}/filt_{}.vcf'.format(indir, fname.split('.')[0]), 'w')
+
+            #store the total number of missing genotypes
+            totalMissData = 0
+            nsn = 0
+            #statistics for the VCF file
+            with open('{}/{}'.format(indir, fname), 'r') as VarS:
+                NofSNPs = 0
+                Loci = set()
+                for line in VarS:
+                    if line.startswith('#CHROM'):
+                        #get samples
+                        header = line.strip().split('\t')
+                        Samples = header[9:]
+                    ######################################
+                    ########for each SNP line#############
+                    ######################################
+                    if line.startswith('un'):
+                        SNPLine = line.strip().split('\t')
+                        Locus = SNPLine[2].split('_')[0] if locus == True else SNPLine[0]
+                        SNP_ID = SNPLine[2]
+
+                        #Sample wide info
+                        NoOfVariants = len(SNPLine[4].split(','))
+
+                        if NoOfVariants > MaxAlleles:
+                            nsn += 1
+                        INFO = SNPLine[7].split(';')
+                        NS = [int(NS.split('=')[1]) for NS in INFO if NS.startswith('NS')][0] #Number of Samples With Data
+                        AF = [float(AF.split('=')[1].split(';')[0]) for AF in INFO if AF.startswith('AF')][0] #Allele Frequency of reference
+
+                        #Sample specific info            
+                        GenotypeList = SNPLine[9:]
+
+                        #get sample specific info
+                        RefSamplesNew = 0
+                        VarHetNew = 0
+                        VarHomNew = 0
+                        MissSampNew = 0
+                        GenotypeListNew = []
+                        #loop through all the genotypes and manipulate each genotype
+                        for i, GenotypeInfo in enumerate(GenotypeList):
+                            #create a dictionary with the SNP position as key and the genotype as value
+                            SNPdic = {}
+                            #if the genotype has been called
+                            if not GenotypeInfo.startswith('./.'):
+                                genotype = GenotypeInfo.split(':')[0]
+                                TotDepth = int(GenotypeInfo.split(':')[1]) #Read Depth
+                                RefDepth = int(GenotypeInfo.split(':')[2].split(',')[0]) #Depth of reference-supporting bases
+                                VarDepth = int(GenotypeInfo.split(':')[2].split(',')[1]) #Depth of variant-supporting bases
+                                VarFreq = VarDepth / TotDepth #Variant allele frequency
+
+                                #################################
+                                #filter by coverage. If both states are supported by depth (heterozygous)
+                                if RefDepth >= RefDepthThrs and VarDepth >= VarDepthThrs:
+
+                                    #################################
+                                    #correct for variant frequency
+                                    #genotype homozygous for reference
+                                    if VarFreq <= VarCovThrs:
+                                        RefSamplesNew += 1
+                                        genotypeNew = '0/0'
+                                        GenotypeInfoNew = GenotypeInfo.replace(genotype, genotypeNew)
+                                        #replace genotype to original
+                                        GenotypeListNew.append(GenotypeList[i].replace(GenotypeInfo,GenotypeInfoNew))
+                                        SNPdic[SNP_ID] = [genotypeNew, TotDepth, RefDepth, VarDepth, VarFreq]
+                                    #genotype homozygous for variant
+                                    elif VarFreq >= 1 - VarCovThrs:
+                                        VarHomNew += 1
+                                        hetState = genotype.split('/')[1]
+                                        genotypeNew = '%s/%s' % (hetState, hetState)
+                                        GenotypeInfoNew = GenotypeInfo.replace(genotype, genotypeNew)
+                                        #replace genotype to original
+                                        GenotypeListNew.append(GenotypeList[i].replace(GenotypeInfo,GenotypeInfoNew))
+                                        SNPdic[SNP_ID] = [genotypeNew, TotDepth, RefDepth, VarDepth, VarFreq]
+                                    #genotype heterozygous
+                                    elif VarCovThrs < VarFreq < 1 - VarCovThrs:
+                                        VarHetNew += 1
+                                        RefState = 0
+                                        hetState = genotype.split('/')[1]
+                                        genotypeNew = '%s/%s' % (RefState, hetState)
+                                        GenotypeInfoNew = GenotypeInfo.replace(genotype, genotypeNew)
+                                        #replace genotype to original
+                                        GenotypeListNew.append(GenotypeList[i].replace(GenotypeInfo,GenotypeInfoNew))
+                                        SNPdic[SNP_ID] = [genotype, TotDepth, RefDepth, VarDepth, VarFreq]
+                                    else:
+                                        print('opps, check {} SNP for errors'.format(SNP_ID))
+
+                                #variant coverage lower than threshold (homozygous for reference)
+                                elif RefDepth >= RefDepthThrs and VarDepth < VarDepthThrs:
+                                    RefSamplesNew += 1
+                                    genotypeNew = '0/0'
+                                    GenotypeInfoNew = GenotypeInfo.replace(genotype, genotypeNew)
+                                    #replace genotype to original
+                                    GenotypeListNew.append(GenotypeList[i].replace(GenotypeInfo,GenotypeInfoNew))
+                                    SNPdic[SNP_ID] = [genotypeNew, TotDepth, RefDepth, VarDepth, VarFreq]
+
+                                #reference coverage lower than threshold
+                                elif RefDepth < RefDepthThrs and VarDepth >= VarDepthThrs:
+                                    VarHomNew += 1
+                                    hetState = genotype.split('/')[1]
+                                    genotypeNew = '%s/%s' % (hetState, hetState)
+                                    GenotypeInfoNew = GenotypeInfo.replace(genotype, genotypeNew)
+                                    #replace genotype to original
+                                    GenotypeListNew.append(GenotypeList[i].replace(GenotypeInfo,GenotypeInfoNew))
+                                    SNPdic[SNP_ID] = [genotypeNew, TotDepth, RefDepth, VarDepth, VarFreq]
+
+                                #both states have lower coverage that the theshold    
+                                else:
+                                    MissSampNew += 1
+                                    genotypeNew = './.'
+                                    GenotypeInfoNew = GenotypeInfo.replace(genotype, genotypeNew)
+                                    #replace genotype to original
+                                    GenotypeListNew.append(GenotypeList[i].replace(GenotypeInfo,GenotypeInfoNew))
+                                    SNPdic[SNP_ID] = [genotypeNew, TotDepth, RefDepth, VarDepth, VarFreq]
+
+                            else: #missing genotype
+                                GenotypeListNew.append(GenotypeList[i])
+                                MissSampNew += 1
+                                SNPdic[SNP_ID] = 'missing'
+
+                        #the new frequency of the variant. If none of the genotypes passed the coverage thresholds then  TotVarFreq = 0
+                        try:
+                            TotVarFreq = (VarHetNew + (VarHomNew*2)) / ((RefSamplesNew + VarHetNew + VarHomNew)*2)
+                        except:
+                            TotVarFreq = 0
+
+                        #the new frequency of the reference. If none of the genotypes passed the coverage thresholds then TotRefFreq = 0
+                        try:
+                            TotRefFreq = (VarHetNew + (RefSamplesNew*2)) / ((RefSamplesNew + VarHetNew + VarHomNew)*2)
+                        except:
+                            TotRefFreq = 0
+                        ##############################################
+                        if MissSampNew/len(Samples) <= MissSampThrs and TotVarFreq >= TotVarFreqThrs and TotRefFreq >= TotRefFreqThrs and NoOfVariants <= MaxAlleles:
+                            #new info based on the replacement of the genotypes
+                            infoNew = ['NS={:d}'.format(len(Samples) - MissSampNew), 'AF={:.3f}'.format(TotVarFreq)]
+                            #create new line
+                            lineNew = line.replace(SNPLine[7], ';'.join(infoNew)).replace('\t'.join(GenotypeList), '\t'.join(GenotypeListNew))
+                            #write line that has passed all above filters (TotVarFreq, Miss) to the new file
+                            FiltFile.write(lineNew)
+                            NofSNPs += 1
+                            Loci.add(Locus)
+
+                            totalMissData += MissSampNew
+                    ######################################
+                    ######################################
+                    ######################################
+                    #write the first lines of the vcf to the new file
+                    else:
+                        FiltFile.write(line)
+
+                    #clean memory
+                    try:
+                        del(line, GenotypeList, GenotypeListNew)
+                        gc.collect()
+                    except:
+                        continue
+
+            FiltFile.close()
+            print('Number of SNPs: %s' %NofSNPs)
+            print('Number of Loci / Chromosomes: %s' %len(Loci))
+            print('Total Percentage of Missing Data: %.2f' %(totalMissData/(len(Samples)*NofSNPs)))
+
