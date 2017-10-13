@@ -59,20 +59,19 @@ def filterReads(indir, qThresh = 30, pQ = 0.5, trmBases = 0, repThrs = 1000):
                     totalReads += 1
                     #get only the read sequence and trim it
                     rowRead = nextLines[1].rstrip()
-                    read = rowRead[:-trmBases]
+                    read = rowRead[:-trmBases] if trmBases else rowRead
                     readLen = len(read)
                     #get the quality of the trimmed read
-                    readQual = nextLines[3].rstrip()[:-trmBases]
-                    
+                    readQual = nextLines[3].rstrip()[:-trmBases] if trmBases else nextLines[3].rstrip()
                     #get read ID
                     readID = nextLines[0].rstrip()
-
+                    
                     #mark/discard reads with at least one uncalled base. '#' is for the uncalled base
                     if '#' in readQual:
                         hiQRead = False
                     else:
                         hiQRead = True
-
+                        
                     #use the illD dictionary to convert ascii to integer scores
                     Qint = [int(illD[i]) for i in readQual]
 
