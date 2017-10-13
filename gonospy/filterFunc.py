@@ -7,7 +7,7 @@ def writeLinesToFile(outfile, line_list):
     for item in line_list:
         outfile.write('%s' % item)
 
-def filterReads(indir, qThresh = 30, pQ = 0.5, trmBases = 0, repThrs = 1000):
+def filterReads(indir, qThresh = 30, pQ = 0.5, percQual = 2/3, trmBases = 0, repThrs = 1000):
     #lines for each read/record
     n=4
     # qThresh -> base quality threshold
@@ -84,7 +84,7 @@ def filterReads(indir, qThresh = 30, pQ = 0.5, trmBases = 0, repThrs = 1000):
                             nBasesHighQ += 1
 
                     #get only reads with a mean quality score above the threshold
-                    if nBasesHighQ >= (2/3)*(len(Qsub)) and hiQRead == True:
+                    if nBasesHighQ >= (percQual)*(len(Qsub)) and hiQRead == True:
                         dic[readID] = [read, readQual]
                         #count coverage
                         if read in countD:
