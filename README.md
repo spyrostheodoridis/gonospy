@@ -63,10 +63,10 @@ among the samples. The following function converts the VCF to either of the thre
 **missChr**: the character to use for missing data. The default is ? but it should be changed to -9 for fastStructure  
 **oneSNP**: export only one random SNP per locus (True) or all SNPs per locus (False)  
 **nOfRep**: number of repetitions when exporting only one random SNP per locus (1)   
-**excludeInv** exclude invariant sites for downstream analyses using RAxML (False)  
-**randomAllele** for heterozygous genotypes in phylip format, the user can either use the IUPAC codes, or randomly choose one of the two states (False)  
-**locusID** if True (default), the program will try to get the locus information from the SND ID column (3rd column in VCF file). Otherwise it will use the chromosome ID (1st column) 
-**populationFiles** in structure format, the second column denotes the population ID where the sample belongs. If None (default value), the program will attempt to
+**excludeInv**: exclude invariant sites for downstream analyses using RAxML (False)  
+**randomAllele**: for heterozygous genotypes in phylip format, the user can either use the IUPAC codes, or randomly choose one of the two states (False)    
+**locusID**: if True (default), the program will try to get the locus information from the SND ID column (3rd column in VCF file). Otherwise it will use the chromosome ID (1st column) 
+**populationFiles**: in structure format, the second column denotes the population ID where the sample belongs. If None (default value), the program will attempt to
 retrieve the population ID from the sample name (e.g. sampleID_popID). Otherwise the user must supply a txt (tab delimited file) with one column for the sample names
 and a second for the population IDs  
 
