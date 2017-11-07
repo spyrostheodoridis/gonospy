@@ -61,11 +61,13 @@ def converVCF(infile, outFormat, missChr = '?', oneSNP = False, nOfRep = 1, excl
                 #check if snp is invariant among genotypes
                 genNoMiss = [i for i in GenotypeList if missChr not in i]
                 distinctGenotypes = list(set(genNoMiss))
-                if len(distinctGenotypes) < 3:
+                if len(distinctGenotypes) == 2:
                     if distinctGenotypes[0].split('/')[0] in distinctGenotypes[1] or distinctGenotypes[0].split('/')[1] in distinctGenotypes[1]:
                         siteGen = 'invariant'
                     else:
                         siteGen = 1
+                elif len(distinctGenotypes) == 1:
+                    siteGen = 'invariant'
                 else:
                     siteGen = 1
 
