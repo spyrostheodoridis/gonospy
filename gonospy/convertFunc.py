@@ -103,6 +103,8 @@ def converVCF(infile, outFormat, missChr = '?', oneSNP = False, nOfRep = 1, excl
                 random_SNP = random.choice(Loci[locus])
                 RandSNP.append(random_SNP)
 
+            nOfSNPs = len(RandSNP)
+
             if outFormat == 'structure':
                 RandSNP.insert(0, '\t')
                 outfile.write('\t'.join(RandSNP))
@@ -184,6 +186,7 @@ def converVCF(infile, outFormat, missChr = '?', oneSNP = False, nOfRep = 1, excl
             outfile = open('{}_allSNPs.phy'.format(infile.split('.')[:-1][0]), 'w')
 
         allSNPs = sorted(allSNPs, key = naturalOrder)
+        nOfSNPs = len(allSNPs)
 
         if outFormat == 'structure':
             allSNPs.insert(0, '\t')
@@ -253,4 +256,4 @@ def converVCF(infile, outFormat, missChr = '?', oneSNP = False, nOfRep = 1, excl
     outfile.close()
 
     del GenotypeList, allSNPs, IndvSNPs
-    print('\n{} file created! Random SNP: {}; Exclude Invariant Sites: {}'.format(outFormat, oneSNP, excludeInv))
+    print('\n{} file created!\nTotal number of SNPs: {}\nRandom SNP: {}\nExclude Invariant Sites: {}'.format(outFormat, nOfSNPs, oneSNP, excludeInv))
